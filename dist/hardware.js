@@ -199,8 +199,9 @@ export function createLayer(name,y,signal) {
   group.userData.flare=flare.material;
   return group;
 }
+export const nativeCallColor = '#ffc685';
 export function createNativeBoundary(y) {
-  const gate=createLayer('C  /  Native call',y,0xffc685);
+  const gate=createLayer('C  /  Native call',y,nativeCallColor);
   const plug=new T.Group();
   plug.position.x=-2.7;
   gate.add(plug);

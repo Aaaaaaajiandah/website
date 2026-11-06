@@ -1,9 +1,9 @@
 import * as T from 'three';
-import { canvasMap } from './hardware.js';
+import { canvasMap, nativeCallColor } from './hardware.js';
 
 // Physical heights are shared by the apertures, fragment clipping, and captions.
 export const levels = { rust:-4.8, llvm:-10.5, native:-16.2, call:-21.5, die:-30.6 };
-const colors = ['#99efbc','#ffc697','#c1beff','#92daf3','#b2f4fc'];
+const colors = ['#99efbc','#ffc697','#c1beff','#92daf3','#b2f4fc',nativeCallColor];
 const code = [
   ['int i = blockIdx.x * blockDim.x','      + threadIdx.x;','if (i < n)','  out[i] = a[i] + b[i];'],
   ['Operation::Add {','  lhs: BufferId(0),','  rhs: BufferId(1),','  output: BufferId(2), len,','}'],
@@ -38,6 +38,7 @@ function randomSource(){
 export function createRain() {
   const uniforms={
     atlas:{value:glyphAtlas()},head:{value:1.65},progress:{value:0},reveal:{value:0},time:{value:0},
+    callHeight:{value:levels.call},callTint:{value:new T.Color(nativeCallColor).convertLinearToSRGB()},
     heights:{value:new T.Vector4(levels.rust,levels.llvm,levels.native,levels.die)},
   };
   const rnd=randomSource(),streams=[];
@@ -54,7 +55,7 @@ export function createRain() {
   const material=new T.ShaderMaterial({
     uniforms,transparent:true,depthWrite:false,
     vertexShader:[
-      'attribute vec4 stream; uniform float head,progress,reveal,time; uniform vec4 heights;',
+      'attribute vec4 stream; uniform float head,progress,reveal,time; uniform vec4 heights; uniform float callHeight; uniform vec3 callTint;',
       'varying vec2 glyphUV,localUV; varying vec3 tint; varying float opacity;',
       'void main(){',
       ' float seed=stream.z, slot=stream.w;',
@@ -75,6 +76,7 @@ export function createRain() {
       ' tint=mix(vec3(.29,.91,.57),vec3(1.,.60,.31),step(.5,phase));',
       ' tint=mix(tint,vec3(.66,.62,1.),step(1.5,phase));',
       ' tint=mix(tint,vec3(.42,.84,1.),step(2.5,phase));',
+      ' tint=mix(tint,callTint,step(y,callHeight));',
       ' float highlight=1.-smoothstep(0.,2.8,mod(slot+time*(3.+seed*6.)+seed*25.,25.));',
       ' tint=mix(tint,vec3(.92,1.,.97),.73*max(highlight,1.-smoothstep(0.,3.,slot)));',
       ' float front=1.-smoothstep(0.,24.,slot);',
@@ -101,8 +103,9 @@ export function createRain() {
 
 export function createPacket() {
   const group=new T.Group();
-  const boundaries=[50,levels.rust,levels.llvm,levels.native,levels.call+1.8,levels.die];
-  code.forEach((lines,i)=>{
+  const packets=[...code,code[code.length-1]];
+  const boundaries=[50,levels.rust,levels.llvm,levels.native,levels.call+1.8,levels.call,levels.die];
+  packets.forEach((lines,i)=>{
     const map=canvasMap(1536,562,(ctx,w,h)=>{
       ctx.save();ctx.scale(w/2,h/2);
       const shade=ctx.createRadialGradient(1,1,0,1,1,1);
