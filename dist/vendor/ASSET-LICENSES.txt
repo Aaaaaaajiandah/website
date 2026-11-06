@@ -1,0 +1,4 @@
+Computer: Kenney Furniture Kit, CC0 1.0. https://kenney.nl/assets/furniture-kit
+Model mirror: https://github.com/shorepine/kenney/blob/main/3d/furniture/laptop.glb
+Three.js 0.180.0: MIT; see THREE-LICENSE.txt
+The laptop and illustrative NPU models rendered by hardware.js, including their procedural textures, are original site assets dedicated to the public domain under CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/). The laptop does not use the bundled legacy Kenney model.

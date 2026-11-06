@@ -1,0 +1,65 @@
+<section class="motion-story" id="journey" aria-labelledby="motion-heading">
+  <div class="container section-head motion-intro">
+    <h2 id="motion-heading">Follow one addition.</h2>
+    <p>Scroll down with a line of CUDA as the compiler turns it into instructions for Hexagon.</p>
+  </div>
+  <div class="motion-track" data-motion-track>
+    <div class="motion-pin">
+      <div class="container motion-stage">
+        <div class="motion-art" data-motion-art role="img" aria-label="A laptop types a vector addition. Its source falls through Rust, LLVM and Hexagon layers. A C caller supplies the buffers before the instructions reach an illustrated NPU.">
+          <canvas class="motion-canvas" aria-hidden="true"></canvas>
+          <div class="motion-image-fallback"><img src="assets/computer-preview.png" alt="A machined silver laptop showing the vector-add CUDA kernel" width="1200" height="900"></div>
+        </div>
+        <div class="motion-captions">
+          <article class="motion-caption is-current" data-motion-caption="0" data-label="CUDA source" data-kind="Source language" data-value="C++">
+            <h3>At the keyboard.</h3>
+            <p>A CUDA kernel adds two arrays, one pair of numbers at a time.</p>
+            <code>vector_add.cu</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="1" data-label="CUDA frontend" data-kind="Source language" data-value="C++">
+            <h3>Off the screen.</h3>
+            <p>Follow the addition as it leaves the editor. Clang reads the source and identifies the supported kernel.</p>
+            <code>out[i] = a[i] + b[i];</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="2" data-label="Rust kernel IR" data-kind="Compiler language" data-value="Rust">
+            <h3>Through Rust.</h3>
+            <p>The frontend records the two inputs, the output and their lengths. Rust checks the operation before lowering.</p>
+            <code>Operation::Add</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="3" data-label="LLVM IR" data-kind="Intermediate form" data-value="LLVM IR">
+            <h3>Down to LLVM.</h3>
+            <p>The addition becomes two loads, a floating-point add and a store. LLVM gives each intermediate value a name.</p>
+            <code>%sum = fadd float %av, %bv</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="4" data-label="Hexagon instructions" data-kind="Assembly" data-value="Hexagon">
+            <h3>Into instructions.</h3>
+            <p>The Hexagon backend selects an add that works on physical registers and packs it with memory operations.</p>
+            <code>r3 = sfadd(r3,r4)</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="5" data-label="C native boundary" data-kind="Call interface" data-value="C">
+            <h3>Call the kernel.</h3>
+            <p>The C caller passes pointers to both input arrays and the output buffer. The compiled Hexagon routine reads the inputs and writes their sums.</p>
+            <code>cuda_npu_add(a, b, out + 1);</code>
+          </article>
+          <article class="motion-caption" data-motion-caption="6" data-label="NPU hardware" data-kind="Hardware target" data-value="NPU">
+            <h3>On the silicon.</h3>
+            <p>The last bytes land on an illustrated NPU. This vector-add build passed on the Hexagon v75 simulator.</p>
+            <code>03 44 03 eb</code>
+          </article>
+        </div>
+        <div class="motion-language"><span data-motion-kind>Source language</span><strong data-motion-value>C++</strong></div>
+        <div class="motion-bottom">
+          <div class="motion-position"><span data-motion-label>CUDA source</span><div class="motion-progress" aria-hidden="true"><i></i></div><a href="#finished">Skip animation</a></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="container motion-static">
+    <article><h3>CUDA source (C++)</h3><code>out[i] = a[i] + b[i];</code><p>One thread adds a pair of values. Clang reads the kernel.</p></article>
+    <article><h3>Rust kernel IR</h3><code>Operation::Add</code><p>The frontend records the buffers and verifies their bounds.</p></article>
+    <article><h3>LLVM IR</h3><code>%sum = fadd float %av, %bv</code><p>Two loads feed a floating-point addition. A store writes the result.</p></article>
+    <article><h3>Hexagon assembly</h3><code>r3 = sfadd(r3,r4)</code><p>The backend selects the native floating-point add.</p></article>
+    <article><h3>C native boundary</h3><code>cuda_npu_add(a, b, out + 1);</code><p>The C caller passes the two input pointers and a pointer to the output.</p></article>
+    <article><h3>NPU hardware</h3><code>03 44 03 eb</code><p>The NPU illustrates the hardware destination. This vector-add build passed on the Hexagon v75 simulator.</p></article>
+  </div>
+</section>

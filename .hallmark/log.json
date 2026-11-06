@@ -1,0 +1,73 @@
+[
+  {
+    "theme": "dusk",
+    "shape": "continuous 3D scroll narrative",
+    "signature": "rotating laptop types CUDA; source crosses clipping barriers into IR and LLVM; conceptual NPU reveal",
+    "material": "Kenney Furniture Kit laptop CC0, original hardware schematic",
+    "validation": "actual scroll forward/back, WebGL, mobile, reduced motion, no script, filters; sloplint render 0 FAIL 0 WARN",
+    "files": [
+      "motion-fragment.html",
+      "dist/journey.js",
+      "dist/styles.css",
+      "dist/assets/computer.glb",
+      "dist/assets/computer-preview.png",
+      "dist/vendor/"
+    ]
+  },
+  {
+    "theme": "dusk",
+    "shape": "Narrative Workflow",
+    "axes": "dark/grotesk-sans/cool",
+    "hero": "Stage",
+    "nav": "edge bar",
+    "footer": "letter close",
+    "imagery": "real dusk photo and scroll-driven compiler visualization",
+    "photos": [
+      "Pascal Debrunner / Unsplash / 3sc0AFcKoAo"
+    ],
+    "entry": "index.html",
+    "fingerprint": "landscape opening then pinned source-to-target story and light future-release section",
+    "sections": [
+      "hero",
+      "scope",
+      "compiler journey",
+      "finished vision",
+      "current state",
+      "contact"
+    ],
+    "signature": "source / IR / LLVM / result scroll sequence",
+    "waived": [
+      "44c",
+      "77",
+      "79"
+    ],
+    "prompt": "Dusk redesign with no Markdown links, scroll visualization and finished-platform explanation",
+    "validation": "15 render screenshots; zero FAIL or WARN; scroll and accessibility fallbacks and filters pass"
+  },
+  {
+    "theme": "console",
+    "shape": "Letter",
+    "axes": "dark/grotesk-sans/chromatic-amber",
+    "hero": "Banner",
+    "nav": "edge bar",
+    "footer": "index columns",
+    "imagery": "actual CUDA source",
+    "photos": [],
+    "entry": "index.html",
+    "fingerprint": "three-page compiler letter with source record",
+    "sections": [
+      "overview",
+      "principles",
+      "status",
+      "scope",
+      "footer"
+    ],
+    "signature": "vector-add source and translation record",
+    "waived": [
+      "77",
+      "79"
+    ],
+    "prompt": "Three-page overview, progress and languages",
+    "validation": "15 screenshots, zero Floor failures, local links pass"
+  }
+]

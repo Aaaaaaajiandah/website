@@ -1,0 +1,10 @@
+.hallmark/render/
+.hallmark/dusk-render/
+.hallmark/journey-qa/
+__pycache__/
+.sites-runtime/
+
+.hallmark/motion-qa/
+.hallmark/motion-render/
+.hallmark/furniture.zip
+.hallmark/kenney-tree.json

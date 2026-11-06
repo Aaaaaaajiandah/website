@@ -1,0 +1,18 @@
+{
+  "scanned": "2026-11-02",
+  "findings": {
+    "framework": "Static HTML, new website directory; no existing web design system",
+    "material": [
+      "plan/README.md:21-32",
+      "plan/phase-04-inference-alpha/checklist.md:5-8",
+      "plan/cuda-subset-v0.md:7-22"
+    ]
+  },
+  "preserve": [
+    "compiler work and current local changes"
+  ],
+  "introduce": [
+    "Console palette and fonts",
+    "three-page information architecture"
+  ]
+}
