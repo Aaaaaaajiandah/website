@@ -23,4 +23,13 @@
   --font-display: "Wix Madefor Display", ui-sans-serif, system-ui, sans-serif; --font-body: "Wix Madefor Text", ui-sans-serif, system-ui, sans-serif;
   --radius-card: 18px; --radius-inner: 10px; --radius-pill: 999px; --rule-hair: 1px;
   --tracking-display: -0.022em; --display-weight: 500;
+  --panel-top: oklch(28% .029 260 / .78);
+  --panel-bottom: oklch(19% .023 264 / .92);
+  --edge-light: oklch(87% .028 248 / .45);
+  --edge-dark: oklch(48% .036 260 / .21);
+  --light-blue: oklch(72% .095 250 / .13);
+  --light-bronze: oklch(76% .085 58 / .10);
+  --shine: oklch(95% .018 245 / .13);
+  --color-code: oklch(83% .069 173);
+  --shadow-deep: 0 28px 65px -30px oklch(6% .015 262 / .82);
 }
