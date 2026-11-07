@@ -7,7 +7,7 @@ const puppeteer = require(require.resolve('puppeteer-core', { paths: ['C:/Users/
 const executablePath = ['C:/Program Files/Google/Chrome/Application/chrome.exe', 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'].find(existsSync);
 const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--enable-webgl','--enable-unsafe-swiftshader','--use-gl=angle','--use-angle=swiftshader'] });
 const page = await browser.newPage();
-const local = name => new URL(name,'http://127.0.0.1:4173/').href;
+const local = name => new URL(name,process.argv[2] || 'http://127.0.0.1:4173/').href;
 function assert(value, message) { if (!value) throw new Error(message); }
 try {
   await page.setViewport({ width: 1440, height: 900 });

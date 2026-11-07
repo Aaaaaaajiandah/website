@@ -1,6 +1,7 @@
 import * as T from 'three';
-import { canvasMap, createChip, createLaptop, createLayer, createNativeBoundary, studio } from './hardware.js';
+import { createChip, createLaptop, createLayer, createNativeBoundary, studio } from './hardware.js';
 import { createPacket, createRain, levels } from './code-rain.js';
+import { createStudioFloor } from './studio-floor.js';
 
 const track=document.querySelector('[data-motion-track]');
 const frame=document.querySelector('[data-motion-art]');
@@ -46,25 +47,21 @@ function makeScene(renderer) {
     createLayer('Hexagon  /  v75',levels.native,0x8bddfa),
     nativeCall.gate,
   ];
-  scene.add(laptop.group,rain.mesh,packet,...layers,chip.group);
-  const shadowMap=canvasMap(256,256,(ctx,w)=>{
-    const gradient=ctx.createRadialGradient(w/2,w/2,4,w/2,w/2,w/2);
-    gradient.addColorStop(0,'rgba(0,0,0,.70)');gradient.addColorStop(.45,'rgba(0,0,0,.42)');gradient.addColorStop(1,'transparent');
-    ctx.fillStyle=gradient;ctx.fillRect(0,0,w,w);
-  });
-  const shadow=new T.Mesh(new T.PlaneGeometry(7.2,4.8),new T.MeshBasicMaterial({map:shadowMap,transparent:true,depthWrite:false,toneMapped:false}));
-  shadow.rotation.x=-Math.PI/2;shadow.position.y=-.34;scene.add(shadow);
+  scene.add(laptop.group,rain.mesh,packet.group,...layers,chip.group);
+  const reflect=createStudioFloor(renderer,scene,[laptop.group,chip.group]);
   const target=new T.Vector3();
+  const travelPosition=new T.Vector3(),travelRotation=new T.Euler(),travelOrientation=new T.Quaternion();
   let stageIndex=-1;
   function paint(p,seconds) {
     const release=ease(p,.095,.267),travel=descent(p);
     const head=lerp(1.74,levels.die-3.8,travel);
     const landing=ease(p,.795,.987);
-    laptop.type(.26+.74*ease(p,0,.127));
-    laptop.group.rotation.set(.015+.08*release,-.27+.16*ease(p,0,.12)-1.85*release,-.025+.20*release);
-    laptop.group.position.set(-7.8*release,.29+3.1*release,-2.5*release);
+    laptop.type(.26+.74*ease(p,0,.102));
+    laptop.pose(release,p);
+    laptop.group.rotation.set(.015+.08*release,-.32+.26*ease(p,0,.12)-1.24*release,-.015+.14*release);
+    laptop.group.position.set(-2.25*release,.22+5.9*release,-4.8*release);
     laptop.group.visible=release<1;
-    shadow.material.opacity=1-release;shadow.visible=laptop.group.visible;
+    scene.environmentRotation.y=-.24+.37*ease(p,0,.22)+.18*Math.sin(travel*4)+.37*landing;
 
     const emerging=ease(p,.115,.211);
     rain.uniforms.head.value=head;
@@ -72,20 +69,33 @@ function makeScene(renderer) {
     rain.uniforms.time.value=seconds;
     rain.uniforms.reveal.value=ease(p,.147,.236)*(1-ease(p,.90,.963));
     rain.mesh.visible=rain.uniforms.reveal.value>.001;
-    packet.position.set(-.16*(1-emerging),head+.32,-1.4+2.02*emerging);
-    packet.rotation.set(-.165*(1-emerging),-.25+.40*emerging+.07*Math.sin(travel*5),-.032*Math.sin(travel*8));
     const compression=ease(-head,-levels.die-4.35,-levels.die+.45);
-    packet.scale.setScalar((.95+.08*emerging)*(1-.78*compression));
-    const opacity=ease(p,.111,.174);
-    packet.visible=opacity>.001 && packet.position.y>levels.die-1;
-    packet.children.forEach(piece=>piece.material.opacity=opacity);
-    nativeCall.plug.position.x=lerp(-3.8,-2.6,ease(-head,-levels.call-2.1,-levels.call));
-    for(const layer of layers) {
-      const near=Math.abs(layer.position.y-head-.4);
-      const crossing=1-ease(near,0,2.0);
-      layer.userData.glow.opacity=.022+.16*crossing;
-      layer.userData.flare.opacity=.52*crossing;
+    const opacity=ease(p,.114,.154)*(1-ease(-head,-levels.die-.45,-levels.die+.12));
+    const wafer=packet.group;
+    wafer.visible=opacity>.006;
+    if(wafer.visible){
+      // Lift the excerpt directly from the tilted editor, then follow its centre
+      // through each aperture. On arrival it turns parallel to the silicon.
+      const lift=ease(p,.113,.207);
+      wafer.position.set(0,-.32,.09);
+      laptop.screen.localToWorld(wafer.position);
+      laptop.screen.getWorldQuaternion(wafer.quaternion);
+      let nearGate=0;
+      for(const layer of layers){
+        nearGate=Math.max(nearGate,1-ease(Math.abs(head+.32-layer.position.y),0,2.1));
+      }
+      travelPosition.set(.12*Math.sin(travel*7),head+.32,.4*(1-compression)*(1-nearGate));
+      travelRotation.set(-.13-.25*nearGate-1.38*compression,.14+.11*Math.sin(travel*6)+.20*nearGate,
+        .035*Math.sin(travel*8)-.045*nearGate,'YXZ');
+      travelOrientation.setFromEuler(travelRotation);
+      wafer.position.lerp(travelPosition,lift);
+      wafer.quaternion.slerp(travelOrientation,lift);
+      wafer.scale.setScalar((.72+.28*lift)*(1-.72*compression));
+      packet.reveal(opacity,wafer.position.y);
     }
+    nativeCall.plug.position.x=lerp(-3.8,-2.6,ease(-head,-levels.call-2.1,-levels.call));
+    for(const layer of layers) layer.userData.cross(head+.32-layer.position.y);
+    chip.land(landing);
     chip.die.emissiveIntensity=.03+.56*landing;
     chip.impact.value=lerp(-1,4.8,ease(-head,-levels.die-.2,-levels.die+3.4));
 
@@ -96,17 +106,19 @@ function makeScene(renderer) {
     // Smoothly level the camera as the glyphs disappear through the die surface.
     const focusY=floor+(distanceToFloor>2?distanceToFloor:Math.pow(Math.max(0,distanceToFloor+2),2)/8);
     target.set(0,focusY,-.18*(1-emerging));
-    const pitch=.25+.10*ease(p,0,.10)+.075*emerging+.51*landing;
-    const azimuth=.36-.27*release+.15*Math.sin(travel*5)+.51*landing;
-    const width=lerp(7.72,9.25,landing);
-    const span=Math.max(4.85+.38*emerging,width/camera.aspect);
+    const pitch=.23+.11*ease(p,0,.12)+.07*emerging+.53*landing;
+    const azimuth=.43-.31*release+.20*Math.sin(travel*5)+.53*landing;
+    const width=7.48-.36*ease(p,0,.13)+.21*emerging+1.23*landing-.65*ease(p,.92,1);
+    const span=Math.max(4.75+.35*emerging,width/camera.aspect);
     const distance=span/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     camera.position.set(target.x+distance*Math.sin(azimuth)*Math.cos(pitch),target.y+distance*Math.sin(pitch),target.z+distance*Math.cos(azimuth)*Math.cos(pitch));
     camera.lookAt(target);
     // Wide empty space above/below the visible shot contains other stages.
     // Cull them before submitting their components, especially on mobile GPUs.
-    layers.forEach(layer=>layer.visible=Math.abs(layer.position.y-focusY)<6.7);
+    layers.forEach(layer=>layer.visible=p>.19 && Math.abs(layer.position.y-focusY)<6.7);
     chip.group.visible=focusY<levels.call+.8;
+    const floorStrength=(1-ease(p,.108,.205))+ease(p,.82,.92);
+    reflect(camera,target,p<.5?-.15:chip.group.position.y-.34,floorStrength,p);
     const index=head<levels.die+.06?6:head<levels.call?5:head<levels.native?4:head<levels.llvm?3:head<levels.rust?2:p>.175?1:0;
     if(index!==stageIndex || !captions[index].classList.contains('is-current')) {
       stageIndex=index;

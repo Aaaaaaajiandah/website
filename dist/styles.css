@@ -315,7 +315,8 @@ body:has(.dusk-scene) .wordmark span { color: var(--color-day-ink); }
 .motion-pin { background: var(--color-paper); }
 .motion-stage { position: relative; min-height: 740px; height: 100svh; max-height: 1050px; }
 .motion-art { position: absolute; inset: 0; }
-.motion-canvas { display: block; width: 100%; height: 100%; }
+.motion-canvas { display: block; width: 100%; height: 100%; visibility: hidden; }
+html[data-motion=ready] .motion-canvas { visibility: visible; }
 .motion-image-fallback { position: absolute; inset: 0; display: grid; place-items: center; }
 .motion-image-fallback img { width: 85%; max-height: 80%; object-fit: contain; }
 html[data-motion=ready] .motion-image-fallback { display: none; }
@@ -361,7 +362,10 @@ html[data-motion=ready] .motion-image-fallback { display: none; }
  --color-studio-glow: oklch(26% .034 271);
 }
 .motion-pin {
- background: radial-gradient(ellipse 57% 58% at 71% 43%,var(--color-studio-light),var(--color-studio-glow) 37%,var(--color-studio) 82%,var(--color-paper));
+ background:
+   radial-gradient(ellipse 29% 44% at 80% 34%,oklch(43% .068 254 / .34),transparent),
+   radial-gradient(ellipse 34% 37% at 43% 66%,oklch(47% .050 46 / .13),transparent),
+   radial-gradient(ellipse 62% 62% at 59% 49%,var(--color-studio-light),var(--color-studio-glow) 40%,var(--color-studio) 84%,var(--color-paper));
 }
 .motion-stage { height: 100svh; min-height: 420px; max-height: none; }
 .motion-art { inset: 0 -1% 62px 27%; }

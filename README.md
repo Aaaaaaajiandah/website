@@ -6,7 +6,7 @@ Run `python build.py` in this directory to rebuild the pages . Serve `dist/` wit
 
 The progress page reflects the Phase 4 checklist dated 1 November 2026. Markdown download links have been removed. Progress is a snapshot, not a live integration. Contact links open the visitor's email or phone application.
 
-The homepage uses the Dusk theme and a locally stored Unsplash landscape credited in the footer. A continuous Three.js shot follows typed CUDA off a rotating laptop and down through Rust kernel IR, LLVM IR and Hexagon instructions. A C caller supplies the three buffer pointers at the native boundary, then the instruction stream reaches the illustrated NPU. The right-hand caption identifies the language, representation or hardware at each stage. Scroll controls the camera on desktop and mobile. Reduced motion, unavailable WebGL and disabled JavaScript use a still image and a readable walkthrough.
+The homepage uses the Dusk theme and a locally stored Unsplash landscape credited in the footer. A continuous Three.js shot follows typed CUDA as a glass plate lifts from a titanium laptop and crosses the Rust, LLVM and Hexagon gates. Their etched rims light up as the code passes. A three-contact connector represents the C caller's buffer pointers. The stream then reaches the illustrated NPU, where the glass lid settles over the die and a pulse follows the board traces. The right-hand caption identifies the language, representation or hardware at each stage. Scroll controls the camera on desktop and mobile. Reduced motion, unavailable WebGL and disabled JavaScript use a still image and a readable walkthrough.
 
 Run `node check-site.mjs` for browser checks. Publication remains pending explicit authorization from the previous approval review.
 

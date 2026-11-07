@@ -1,5 +1,6 @@
 import * as T from 'three';
 import { canvasMap, nativeCallColor } from './hardware.js';
+import { opticalGlass } from './optics.js';
 
 // Physical heights are shared by the apertures, fragment clipping, and captions.
 export const levels = { rust:-4.8, llvm:-10.5, native:-16.2, call:-21.5, die:-30.6 };
@@ -42,9 +43,12 @@ export function createRain() {
     heights:{value:new T.Vector4(levels.rust,levels.llvm,levels.native,levels.die)},
   };
   const rnd=randomSource(),streams=[];
-  for(let i=0;i<94;i++) {
-    const x=(rnd()-.5)*3.9,z=(rnd()-.5)*1.59,seed=rnd();
-    for(let slot=0;slot<25;slot++) streams.push(x,z,seed,slot);
+  // Separate the stream into filaments, leaving negative space around the code.
+  for(let i=0;i<64;i++) {
+    const angle=i%8*Math.PI/4;
+    const x=Math.cos(angle)*1.72+(rnd()-.5)*.46;
+    const z=Math.sin(angle)*.66+(rnd()-.5)*.23,seed=rnd();
+    for(let slot=0;slot<23;slot++) streams.push(x,z,seed,slot);
   }
   const quad=new T.PlaneGeometry(1,1);
   const geometry=new T.InstancedBufferGeometry();
@@ -64,8 +68,10 @@ export function createRain() {
       ' float y=head+(slot+drift)*spacing+seed*2.-1.;',
       ' float phase=step(y,heights.x)+step(y,heights.y)+step(y,heights.z);',
       ' float funnel=mix(.19,1.,smoothstep(heights.w,heights.w+4.2,y));',
-      ' float x=(stream.x+.11*sin(y*1.3+seed*9.))*funnel;',
-      ' float z=(stream.y+.09*cos(y+seed*7.))*funnel;',
+      ' float turn=.33*sin(y*.48+progress*5.);',
+      ' vec2 path=mat2(cos(turn),sin(turn),-sin(turn),cos(turn))*stream.xy;',
+      ' float x=(path.x+.065*sin(y*1.3+seed*4.))*funnel;',
+      ' float z=(path.y+.05*cos(y+seed*4.))*funnel;',
       ' vec4 eye=viewMatrix*vec4(x,y,z,1.);',
       ' float size=(.115+.067*seed)*mix(.72,1.,funnel);',
       ' eye.xy+=position.xy*size*vec2(1.,1.28);',
@@ -73,9 +79,9 @@ export function createRain() {
       ' float glyph=mod(floor(seed*128.)+slot*7.+floor(progress*(65.+seed*90.)+time*(2.+seed)),32.);',
       ' glyphUV=(vec2(mod(glyph,16.),7.-phase*2.-floor(glyph/16.))+uv)/vec2(16.,8.);',
       ' localUV=uv;',
-      ' tint=mix(vec3(.29,.91,.57),vec3(1.,.60,.31),step(.5,phase));',
-      ' tint=mix(tint,vec3(.66,.62,1.),step(1.5,phase));',
-      ' tint=mix(tint,vec3(.42,.84,1.),step(2.5,phase));',
+      ' tint=mix(vec3(.52,.83,.74),vec3(.97,.70,.49),step(.5,phase));',
+      ' tint=mix(tint,vec3(.72,.69,.98),step(1.5,phase));',
+      ' tint=mix(tint,vec3(.54,.79,.94),step(2.5,phase));',
       ' tint=mix(tint,callTint,step(y,callHeight));',
       ' float highlight=1.-smoothstep(0.,2.8,mod(slot+time*(3.+seed*6.)+seed*25.,25.));',
       ' tint=mix(tint,vec3(.92,1.,.97),.73*max(highlight,1.-smoothstep(0.,3.,slot)));',
@@ -103,26 +109,59 @@ export function createRain() {
 
 export function createPacket() {
   const group=new T.Group();
+  const outline=new T.Shape();
+  const halfWidth=2.04,halfHeight=.79,corner=.12;
+  outline.moveTo(-halfWidth+corner,-halfHeight);
+  outline.lineTo(halfWidth-corner,-halfHeight);
+  outline.quadraticCurveTo(halfWidth,-halfHeight,halfWidth,-halfHeight+corner);
+  outline.lineTo(halfWidth,halfHeight-corner);
+  outline.quadraticCurveTo(halfWidth,halfHeight,halfWidth-corner,halfHeight);
+  outline.lineTo(-halfWidth+corner,halfHeight);
+  outline.quadraticCurveTo(-halfWidth,halfHeight,-halfWidth,halfHeight-corner);
+  outline.lineTo(-halfWidth,-halfHeight+corner);
+  outline.quadraticCurveTo(-halfWidth,-halfHeight,-halfWidth+corner,-halfHeight);
+  const glass=opticalGlass(0x172d46,{opacity:.70,edgeOpacity:.8,roughness:.14,envMapIntensity:.8});
+  const geometry=new T.ExtrudeGeometry(outline,{
+    depth:.063,bevelEnabled:true,bevelThickness:.035,bevelSize:.035,bevelSegments:5,curveSegments:16,
+  });
+  const plate=new T.Mesh(geometry,glass);
+  plate.renderOrder=3;
+  group.add(plate);
+
+  const rimMaterial=new T.LineBasicMaterial({color:0xaacbdf,transparent:true,opacity:.63,depthWrite:false});
+  const rimGeometry=new T.BufferGeometry().setFromPoints(outline.getPoints(16));
+  const rim=new T.LineLoop(rimGeometry,rimMaterial);
+  rim.position.z=.1;rim.renderOrder=4;group.add(rim);
   const packets=[...code,code[code.length-1]];
   const boundaries=[50,levels.rust,levels.llvm,levels.native,levels.call+1.8,levels.call,levels.die];
+  const faces=[];
   packets.forEach((lines,i)=>{
-    const map=canvasMap(1536,562,(ctx,w,h)=>{
-      ctx.save();ctx.scale(w/2,h/2);
-      const shade=ctx.createRadialGradient(1,1,0,1,1,1);
-      shade.addColorStop(0,'rgba(8,14,23,.90)');shade.addColorStop(.64,'rgba(8,14,23,.65)');shade.addColorStop(1,'rgba(8,14,23,0)');
-      ctx.fillStyle=shade;ctx.fillRect(0,0,2,2);ctx.restore();
-      ctx.font='bold 56px Consolas, monospace';ctx.textBaseline='middle';
-      const left=(w-Math.max(...lines.map(line=>ctx.measureText(line).width)))/2;
+    const map=canvasMap(1280,480,(ctx,w,h)=>{
+      const coating=ctx.createLinearGradient(0,h,w,0);
+      coating.addColorStop(0,'rgba(11,24,39,.81)');
+      coating.addColorStop(.66,'rgba(17,30,46,.73)');
+      coating.addColorStop(1,'rgba(42,60,81,.49)');
+      ctx.fillStyle=coating;ctx.beginPath();ctx.roundRect(0,0,w,h,29);ctx.fill();
+      ctx.fillStyle=colors[i];ctx.fillRect(35,40,5,44);
+      ctx.font='500 48px Consolas, monospace';ctx.textBaseline='middle';
+      const left=83, spacing=68;
       lines.forEach((line,j)=>{
         ctx.fillStyle=j===Math.floor(lines.length/2)?'#f4fcfc':colors[i];
-        ctx.shadowColor=colors[i];ctx.shadowBlur=3;
-        ctx.fillText(line,left,(h-(lines.length-1)*77)/2+j*77);
+        ctx.fillText(line,left,(h-(lines.length-1)*spacing)/2+j*spacing,w-left-60);
       });
     });
     const material=new T.MeshBasicMaterial({map,transparent:true,depthWrite:false,toneMapped:false,
       clippingPlanes:[new T.Plane(new T.Vector3(0,-1,0),boundaries[i]),new T.Plane(new T.Vector3(0,1,0),-boundaries[i+1])]});
-    const mesh=new T.Mesh(new T.PlaneGeometry(4.25,1.56),material);
-    mesh.renderOrder=4;group.add(mesh);
+    const mesh=new T.Mesh(new T.PlaneGeometry(4.04,1.55),material);
+    mesh.position.z=.103;mesh.renderOrder=5;group.add(mesh);faces.push(mesh);
   });
-  return group;
+  function reveal(amount,head) {
+    glass.opacity=.70*amount;rimMaterial.opacity=.63*amount;
+    // Only two representations can ever straddle a gate in the same frame.
+    faces.forEach((face,i)=>{
+      face.visible=head<boundaries[i]+2 && head>boundaries[i+1]-2;
+      face.material.opacity=amount;
+    });
+  }
+  return {group,reveal};
 }
